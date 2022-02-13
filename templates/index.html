@@ -1,0 +1,286 @@
+<!doctype html>
+<head>
+    <title>Smart Plant</title>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
+    <link rel= "stylesheet" href= "{{ url_for('static',filename='styles/custom.css') }}">
+
+
+    <script type="text/javascript">
+        // google.charts.load('current', {'packages':['corechart']});
+        // google.charts.setOnLoadCallback(drawCharts);
+
+        // function drawCharts(){
+        //     setInterval(function () {
+        //         getWeatherData();
+        //     }, 3000);
+        // }
+
+        // var weatherData = [];
+
+        // function drawLineChart(newdata){
+        //     if(weatherData.length >= 5) {
+        //         weatherData.shift();
+        //     }
+        //     weatherData.push(newdata);
+
+        //     tempData = new google.visualization.DataTable();
+        //     tempData.addColumn('string','Time');
+        //     tempData.addColumn('number','Temperature');
+
+        //     humidityData = new google.visualization.DataTable();
+        //     humidityData.addColumn('string','Time');
+        //     humidityData.addColumn('number','Humidity');
+
+        //     windData = new google.visualization.DataTable();
+        //     windData.addColumn('string','Time');
+        //     windData.addColumn('number','Wind Speed');
+
+        //     for(i in weatherData) {
+        //         var datetime = formatAMPM(convertTZ(new Date(weatherData[i].date_time), "Europe/London"));
+
+        //         var temp = parseFloat(weatherData[i].temp);
+        //         tempData.addRows([[datetime,temp]]);
+
+        //         var humidity = parseFloat(weatherData[i].hmdt);
+        //         humidityData.addRows([[datetime,humidity]]);
+
+        //         var windSpeed = parseFloat(weatherData[i].wind_speed);
+        //         windData.addRows([[datetime,windSpeed]]);
+        //     }
+
+        //     tempChartArea = document.getElementById('temp_div');
+        //     tempChart = new google.visualization.LineChart(tempChartArea);
+        //     tempChart.draw(tempData,{legend: 'none',
+        //         colors: ['#d63230'], curveType: 'function'}
+        //     );
+
+        //     humidityChartArea = document.getElementById('humidity_div');
+        //     humidityChart = new google.visualization.LineChart(humidityChartArea);
+        //     humidityChart.draw(humidityData,{legend: 'none',
+        //         colors: ['#f39237'], curveType: 'function'}
+        //     );
+
+        //     windChartArea = document.getElementById('wind_div');
+        //     windChart = new google.visualization.LineChart(windChartArea);
+        //     windChart.draw(windData,{legend: 'none',
+        //         colors: ['#008000'], curveType: 'function'}
+        //     );
+        // }
+
+        // function formatAMPM(date) {
+        //     var hours = date.getHours();
+        //     var minutes = date.getMinutes();
+        //     var seconds = date.getSeconds();
+        //     var ampm = hours >= 12 ? 'pm' : 'am';
+        //     hours = hours % 12;
+        //     hours = hours ? hours : 12;
+        //     minutes = minutes < 10 ? '0' + minutes : minutes;
+        //     seconds = seconds < 10 ? '0' + seconds : seconds;
+        //     var strTime = hours + ':' + minutes + ':' + seconds + ampm;
+        //     return strTime;
+        // }
+
+        // function convertTZ(date, tzString) {
+        //     return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {timeZone: tzString}));   
+        // }
+
+        $(document).ready(function() {
+            getMorningData();
+            getWeatherData();
+            getNewsData();
+        });
+
+        function getMorningData() {
+            jQuery.ajax({
+                url: "/api/getMorningData",            
+                success: function(ndata,textStatus,xgr){
+                    $('#gmMsg').html("<ul><li>" + ndata[0] + "</li><li>" + ndata[1] + "</li><li>" + ndata[2] + "</li></ul>");
+                }
+            })
+        }
+
+        function getWeatherData(){
+            jQuery.ajax({
+                url: "/api/getWeatherData",            
+                success: function(ndata,textStatus,xgr){
+                    //drawLineChart(ndata);
+                    $('#weatherDescDiv').html("Weather Description: " + ndata.desc);
+                    $('#actualTemp').html(ndata.temp + "°C");
+                    $('#actualHmdt').html(ndata.hmdt + "%");
+                    $('#actualWindSpeed').html(ndata.wind_speed + "km/h");
+                }
+            })
+        }
+
+        function getNewsData(){
+            jQuery.ajax({
+                url: "/api/getNewsData",            
+                success: function(ndata,textStatus,xgr){
+                    var html = '';
+                    for(i in ndata) {
+                        html += '<div class="col-md-4">';
+                        html += '<div class="card" onclick="window.open(\'https://' + ndata[i].link + '\',\'_blank\')">';
+                        html += '<div class="card-header">';
+                        html += '<img style="width:100%" src="' + ndata[i].img + '" alt="news" />';
+                        html += '</div><div class="card-body"><h4>';
+                        html += ndata[i].title;
+                        html += '</h4><div class="user"><div class="user-info"><h5>';
+                        html += ndata[i].site + '</h5></div></div></div></div></div>';
+                    }
+                    $('#newsBody').html(html);
+                }
+            })
+        }
+    </script>
+</head>
+<body>
+    <div id="wrapper">
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="/">Dashboard</a>
+            </div>
+        </nav>
+        <div id="page-wrapper">
+            <div class="row" id="dashboard" style="padding:0 20px">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="row">
+                            <div class="panel panel-green">
+                                <div class="panel-heading">
+                                    <i class="fas fa-sun"></i> Good Morning Messages
+                                </div>
+                                <div class="panel-body">
+                                    <div class="col-md-12" id="gmMsg"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <!-- Weather Overview -->
+                            <div class="panel panel-green">
+                                <div class="panel-heading">
+                                    <i class="fas fa-leaf"></i> Weather Overview
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="panel panel-info">
+                                                <div class="panel-heading">
+                                                    <div id="weatherDescDiv" style="font-weight: bold;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Temperature -->
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="panel panel-danger">
+                                                <div class="panel-heading">
+                                                    <i class="fas fa-thermometer-half"></i> Temperature
+                                                    <span id="actualTemp" style="float: right; padding-right: 20px; font-weight: bold;"></span>
+                                                </div>
+                                                <!-- <div class="panel-body">
+                                                    <div id="temp_div"></div>
+                                                </div> -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Humidity -->
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="panel panel-warning">
+                                                <div class="panel-heading">
+                                                    <i class="fas fa-tint"></i> Humidity
+                                                    <span id="actualHmdt" style="float: right; padding-right: 20px; font-weight: bold;"></span>
+                                                </div>
+                                                <!-- <div class="panel-body">
+                                                    <div id="humidity_div"></div>
+                                                </div> -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Wind Speed -->
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="panel panel-success">
+                                                <div class="panel-heading">
+                                                    <i class="fas fa-wind"></i> Wind Speed
+                                                    <span id="actualWindSpeed" style="float: right; padding-right: 20px; font-weight: bold;"></span>
+                                                </div>
+                                                <!-- <div class="panel-body">
+                                                    <div id="wind_div"></div>
+                                                </div> -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="panel panel-green">
+                                <div class="panel-heading">
+                                    <i class="fas fa-users"></i> Team
+                                </div>
+                                <div class="panel-body">
+                                    <div class="col-md-12">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="user" style="padding-top: 10px; justify-content: center;" >
+                                                    <img src="https://studyinbaltics.ee/wp-content/uploads/2020/03/3799Ffxy.jpg" alt="user" />
+                                                </div>
+                                                <div class="row" style="text-align: center;">
+                                                    <span style="margin-top: 5px; font-weight: bold;">Niko Lennon</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="user" style="padding-top: 10px; justify-content: center;" >
+                                                    <img src="https://lh3.googleusercontent.com/ogw/ADGmqu8sn9zF15pW59JIYiLgx3PQ3EyZLFp5Zqao906l=s32-c-mo" alt="user" />
+                                                </div>
+                                                <div class="row" style="text-align: center;">
+                                                    <span style="margin-top: 5px; font-weight: bold;">Harvie Watson</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="user" style="padding-top: 10px; justify-content: center;" >
+                                                    <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="user" />
+                                                </div>
+                                                <div class="row" style="text-align: center;">
+                                                    <span style="margin-top: 5px; font-weight: bold;">Sharon Dotson</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="user" style="padding-top: 10px; justify-content: center;" >
+                                                    <img src="https://randomuser.me/api/portraits/men/62.jpg" alt="user" />
+                                                </div>
+                                                <div class="row" style="text-align: center;">
+                                                    <span style="margin-top: 5px; font-weight: bold;">Evan Marsden</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- News -->
+                    <div class="col-md-8">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                <i class="fas fa-newspaper"></i> News
+                            </div>
+                            <div class="panel-body" id="newsBody"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
